@@ -1,3 +1,26 @@
 <resources>
     <string name="app_name">Hackathon</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <string name="api_key">D0C44570-989D-4A04-A56B-9A5D761AD19B</string>
+
+    <string name="identity_client">0f165d38-2877-46d9-8cce-b7a56dc2bb41</string>
+    <string name="identity_secret">3f7b9805-3d5d-4d77-9046-ced707efa67b</string>
+    <string name="identity_client_prefix">trn:tesco:cid:</string>
+    <string name="identity_grant_type">password</string>
+    <string name="identity_user_name">StoreStockManagement_Client</string>
+    <string name="identity_password">EWauy8TTbM</string>
+    <string name="identity_scope">oob</string>
 </resources>
