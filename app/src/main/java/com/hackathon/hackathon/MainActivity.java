@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ProgressBar;
 
@@ -18,8 +20,10 @@ import com.hackathon.hackathon.models.ProductLocationResponse;
 import com.hackathon.hackathon.models.ProductOverviewAPIRequest;
 import com.hackathon.hackathon.models.ProductSearchResponse;
 import com.hackathon.hackathon.models.SearchProductRequest;
+import com.hackathon.hackathon.models.StoreDetailsApiModel;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -27,8 +31,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String SERVER_ERROR = "Server Error. Try again please.";
     private String NETWORK_ERROR = "Internet not available. Try again please.";
     private String STORE_NUMBER = "2087";
+    private String GREETING_MSG = "Welcome to %s. How can I help you today?";
     private TextToSpeech tts;
     private ProgressBar progressBar;
+    private RecyclerView recyclerView;
+    private ChatAppMsgAdapter mAdapter;
+    private StoreDetailsApiModel mStoreDetails;
+    private List<ChatAppMsgDTO> list;
 
     private PDADataConnectorFactory pdaDataConnectorFactory;
     private PreferencesHelper preferencesHelper;
@@ -41,6 +50,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         progressBar = findViewById(R.id.progress_bar);
+        recyclerView = findViewById(R.id.chat_recycler_view);
         findViewById(R.id.button_record).setOnClickListener(this);
 
         pdaDataConnectorFactory = new PDADataConnectorFactory();
@@ -56,8 +66,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (status != TextToSpeech.ERROR) {
                     tts.setLanguage(Locale.UK);
                 }
+                if (mStoreDetails != null) {
+                    String welcomeText = String.format(GREETING_MSG, mStoreDetails.getStoreName());
+                    tts.speak(welcomeText, TextToSpeech.QUEUE_FLUSH, null);
+                }
             }
         });
+
+        if (getIntent() != null && getIntent().hasExtra(Constants.STORE_DETAILS)) {
+            mStoreDetails = (StoreDetailsApiModel) getIntent().getSerializableExtra(Constants.STORE_DETAILS);
+        }
+
+        list = new ArrayList<>();
+        mAdapter = new ChatAppMsgAdapter(list);
+        LinearLayoutManager mLayoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(mLayoutManager);
+        recyclerView.setAdapter(mAdapter);
     }
 
     @Override
@@ -108,6 +132,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void callIdentity(final String query) {
+        ChatAppMsgDTO msg = new ChatAppMsgDTO(ChatAppMsgDTO.MSG_TYPE_SENT, query);
+        list.add(msg);
+        mAdapter.notifyDataSetChanged();
         identityManager.getIdentity(this, new IdentityManager.IdentityCallback() {
             @Override
             public void onSuccess(String id) {
@@ -135,6 +162,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void onRequestSuccess(ProductSearchResponse model) {
+                if (model == null
+                        || model.getProductListResponseRoot() == null
+                        || model.getProductListResponseRoot().getProductListSubRoot() == null
+                        || model.getProductListResponseRoot().getProductListSubRoot().getProducts() == null
+                        || model.getProductListResponseRoot().getProductListSubRoot().getProducts().getResults() == null
+                        || model.getProductListResponseRoot().getProductListSubRoot().getProducts().getResults().size() == 0) {
+                    progressBar.setVisibility(View.GONE);
+                    addMessageInList(Data.NO_ANSWER);
+                    return;
+                }
                 ProductOverviewAPIRequest request = new ProductOverviewAPIRequest();
                 request.setLocationId(STORE_NUMBER);
                 request.setIdentityAccessToken("Bearer " + preferencesHelper.getPreferences().getString(Constants.SignOnConstants.AUTH_ACCESS_TOKEN, ""));
@@ -157,9 +194,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onRequestSuccess(ProductLocationResponse model) {
                 progressBar.setVisibility(View.GONE);
+                if (model == null
+                        || model.getLocationResponseList() == null
+                        || model.getLocationResponseList().size() == 0) {
+                    addMessageInList(Data.NO_ANSWER);
+                    return;
+                }
                 String aisle = "You can find " + query + " in Aisle " + model.getLocationResponseList().get(0).getAisleCode();
-                tts.speak(aisle, TextToSpeech.QUEUE_FLUSH, null);
+                addMessageInList(aisle);
             }
         });
+    }
+
+    private void addMessageInList(String text) {
+        ChatAppMsgDTO msg = new ChatAppMsgDTO(ChatAppMsgDTO.MSG_TYPE_RECEIVED, text);
+        list.add(msg);
+        mAdapter.notifyDataSetChanged();
+        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
     }
 }

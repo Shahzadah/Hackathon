@@ -7,7 +7,7 @@ public class Data {
 
     private static Data _data;
 
-    private final String NO_ANSWER = "Sorry, Can you come again?";
+    public static final String NO_ANSWER = "Sorry, Can you come again?";
     private final HashMap<String, String> mData;
 
     public static Data getInstance() {
