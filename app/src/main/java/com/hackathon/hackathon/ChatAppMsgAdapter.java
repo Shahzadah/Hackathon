@@ -47,14 +47,14 @@ public class ChatAppMsgAdapter extends RecyclerView.Adapter<ChatAppMsgViewHolder
     @Override
     public ChatAppMsgViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
-        View view = layoutInflater.inflate(R.layout.activity_chat_app_item_view, parent, false);
+        View view = layoutInflater.inflate(R.layout.row_chat_item, parent, false);
         return new ChatAppMsgViewHolder(view);
     }
 
     @Override
     public int getItemCount() {
         if (msgDtoList == null) {
-            msgDtoList = new ArrayList<ChatAppMsgDTO>();
+            msgDtoList = new ArrayList<>();
         }
         return msgDtoList.size();
     }

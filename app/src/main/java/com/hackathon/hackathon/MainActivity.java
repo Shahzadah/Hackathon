@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String SERVER_ERROR = "Server Error. Try again please.";
     private String NETWORK_ERROR = "Internet not available. Try again please.";
     private String STORE_NUMBER = "2087";
-    private String GREETING_MSG = "Welcome to %s. How can I help you today?";
+    private String GREETING_MSG = "Welcome to %s store, How can I help you today?";
     private TextToSpeech tts;
     private ProgressBar progressBar;
     private RecyclerView recyclerView;
@@ -39,7 +39,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private StoreDetailsApiModel mStoreDetails;
     private List<ChatAppMsgDTO> list;
 
-    private PDADataConnectorFactory pdaDataConnectorFactory;
     private PreferencesHelper preferencesHelper;
     private IdentityManager identityManager;
     private ProductSearchDataManager productSearchDataManager;
@@ -53,7 +52,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         recyclerView = findViewById(R.id.chat_recycler_view);
         findViewById(R.id.button_record).setOnClickListener(this);
 
-        pdaDataConnectorFactory = new PDADataConnectorFactory();
+        PDADataConnectorFactory pdaDataConnectorFactory = new PDADataConnectorFactory();
         preferencesHelper = new PreferencesHelper(this);
 
         identityManager = new IdentityManager(pdaDataConnectorFactory, preferencesHelper);
@@ -80,6 +79,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         list = new ArrayList<>();
         mAdapter = new ChatAppMsgAdapter(list);
         LinearLayoutManager mLayoutManager = new LinearLayoutManager(this);
+//        mLayoutManager.setStackFromEnd(true);
+//        mLayoutManager.setReverseLayout(true);
         recyclerView.setLayoutManager(mLayoutManager);
         recyclerView.setAdapter(mAdapter);
     }
@@ -87,18 +88,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == SpeechRecognitionHelper.VOICE_RECOGNITION_REQUEST_CODE && resultCode == RESULT_OK) {
-            // receiving a result in string array
-            // there can be some strings because sometimes speech recognizing inaccurate
-            // more relevant results in the beginning of the list
             ArrayList matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-
-            // in “matches” array we holding a results... let’s show the most relevant
             if (matches.size() > 0) {
-                String text = matches.get(0).toString();
-                progressBar.setVisibility(View.VISIBLE);
-                callIdentity(text);
-//                tts.speak(Data.getInstance().getAnswer(text), TextToSpeech.QUEUE_FLUSH, null);
-//                Toast.makeText(MainActivity.this, matches.get(0).toString(), Toast.LENGTH_LONG).show();
+                String question = matches.get(0).toString();
+                addQuestionInList(question);
+                if (question.contains("where can I find")) {
+                    progressBar.setVisibility(View.VISIBLE);
+                    String newText = question.replace("where can I find", "");
+                    callIdentity(newText);
+                } else if (question.contains("where is")) {
+                    progressBar.setVisibility(View.VISIBLE);
+                    String newText = question.replace("where is", "");
+                    callIdentity(newText);
+                } else if (question.contains("where can I get")) {
+                    progressBar.setVisibility(View.VISIBLE);
+                    String newText = question.replace("where can I get", "");
+                    callIdentity(newText);
+                } else {
+                    String answer = Data.getInstance().getAnswer(question);
+                    addMessageInList(answer);
+                }
+//                Toast.makeText(MainActivity.this, question, Toast.LENGTH_LONG).show();
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
@@ -132,9 +142,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void callIdentity(final String query) {
-        ChatAppMsgDTO msg = new ChatAppMsgDTO(ChatAppMsgDTO.MSG_TYPE_SENT, query);
-        list.add(msg);
-        mAdapter.notifyDataSetChanged();
         identityManager.getIdentity(this, new IdentityManager.IdentityCallback() {
             @Override
             public void onSuccess(String id) {
@@ -204,6 +211,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 addMessageInList(aisle);
             }
         });
+    }
+
+    private void addQuestionInList(String text) {
+        ChatAppMsgDTO msg = new ChatAppMsgDTO(ChatAppMsgDTO.MSG_TYPE_SENT, text);
+        list.add(msg);
+        mAdapter.notifyDataSetChanged();
     }
 
     private void addMessageInList(String text) {

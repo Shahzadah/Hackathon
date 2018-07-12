@@ -1,7 +1,6 @@
 package com.hackathon.hackathon;
 
 import java.util.HashMap;
-import java.util.Map;
 
 public class Data {
 
@@ -20,28 +19,25 @@ public class Data {
     private Data() {
         mData = new HashMap<>();
         mData.put("how are you", "I am doing good, How about you.");
-        mData.put("where are the biscuits", "Go to Aisle 1 and 1st shelf");
-        mData.put("biscuits", "We have lot of biscuits available. Tell me the brands?");
-        mData.put("good day", "Please check Aisle 1. Number of biscuits available.");
-        mData.put("is there any offer on cosmetics", "Yes, buy one get one offer currently going");
-        mData.put("ok", "");
-        mData.put("", "");
-        mData.put("", "");
-        mData.put("", "");
-        mData.put("", "");
-        mData.put("", "");
-        mData.put("", "");
-        mData.put("", "");
-        mData.put("", "");
+        mData.put("thank you", "welcome");
+        mData.put("hi", "hello");
+        mData.put("good day", "thank you, you too");
+        mData.put("is there any offer on cosmetics", "we have good offers on loreal products");
+        mData.put("ok", "welcome");
+        mData.put("thanks", "welcome");
+        mData.put("hello", "hi");
+        mData.put("can you help me", "eager to help, tell me");
+        mData.put("is there any discount going on", "we have good offers on clothing");
+        mData.put("do u accept card", "yes we do accept card");
+        mData.put("where is female clothing section", "It is in Aisle 12 behind pharmacy");
+        mData.put("bye", "bye bye");
+        mData.put("go to hell", "that is so rude");
+        mData.put("where the hell are you", "I am here to help you");
     }
 
     public String getAnswer(String question) {
-        /*if (mData.containsKey(question)) {
+        if (mData.containsKey(question.toLowerCase())) {
             return mData.get(question);
-        }*/
-        for (Map.Entry<String, String> entry : mData.entrySet()) {
-            String key = entry.getKey();
-
         }
         return NO_ANSWER;
     }

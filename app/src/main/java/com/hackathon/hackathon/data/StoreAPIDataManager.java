@@ -12,7 +12,7 @@ public class StoreAPIDataManager {
     private PDADataConnector cloudConnector;
 
     public StoreAPIDataManager(PDADataConnectorFactory dataConnectorFactory) {
-        cloudConnector = dataConnectorFactory.createCloudConnector("http://172.21.156.247/StoreAPI/api/StoreDetails/GetStoreDetails/", PDADataConnectorFactory.REST_REQUEST);
+        cloudConnector = dataConnectorFactory.createCloudConnector("http://dvmscapp00002uk.dev.global.tesco.org/StoreAPI/api/StoreDetails/GetStoreDetails/", PDADataConnectorFactory.REST_REQUEST);
     }
 
     /**

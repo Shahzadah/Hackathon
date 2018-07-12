@@ -70,7 +70,7 @@ public class SpeechRecognitionHelper {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
 
         // giving additional parameters:
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Select an application");    // user hint
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "How can i help you?");    // user hint
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH);    // setting recognition model, optimized for short phrases – search queries
         intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);    // quantity of results we want to receive
 //choosing only 1st -  the most relevant
