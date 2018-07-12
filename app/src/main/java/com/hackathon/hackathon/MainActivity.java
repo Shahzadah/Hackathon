@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String SERVER_ERROR = "Server Error. Try again please.";
     private String NETWORK_ERROR = "Internet not available. Try again please.";
     private String STORE_NUMBER = "2087";
-    private TextToSpeech t1;
+    private TextToSpeech tts;
     private ProgressBar progressBar;
 
     private PDADataConnectorFactory pdaDataConnectorFactory;
@@ -35,7 +35,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private IdentityManager identityManager;
     private ProductSearchDataManager productSearchDataManager;
     private ProductLocationDataManager productLocationDataManager;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,11 +50,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         productSearchDataManager = new ProductSearchDataManager(pdaDataConnectorFactory);
         productLocationDataManager = new ProductLocationDataManager(pdaDataConnectorFactory);
 
-        t1 = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+        tts = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
                 if (status != TextToSpeech.ERROR) {
-                    t1.setLanguage(Locale.UK);
+                    tts.setLanguage(Locale.UK);
                 }
             }
         });
@@ -63,11 +62,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        // if it’s speech recognition results
-        // and process finished ok
         if (requestCode == SpeechRecognitionHelper.VOICE_RECOGNITION_REQUEST_CODE && resultCode == RESULT_OK) {
-
             // receiving a result in string array
             // there can be some strings because sometimes speech recognizing inaccurate
             // more relevant results in the beginning of the list
@@ -78,23 +73,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 String text = matches.get(0).toString();
                 progressBar.setVisibility(View.VISIBLE);
                 callIdentity(text);
-//                t1.speak(Data.getInstance().getAnswer(text), TextToSpeech.QUEUE_FLUSH, null);
-
-
+//                tts.speak(Data.getInstance().getAnswer(text), TextToSpeech.QUEUE_FLUSH, null);
 //                Toast.makeText(MainActivity.this, matches.get(0).toString(), Toast.LENGTH_LONG).show();
-//                if(text.contains("how are you")) {
-//                    t1.speak("I am good, How about you.", TextToSpeech.QUEUE_FLUSH, null);
-//                }
             }
         }
-
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-
-    /**
-     * Prepare search query to call api for Load more (will add offset while load more).
-     */
     private SearchProductRequest prepareSearchQuery(String queryText) {
         return new SearchProductRequest(
                 queryText,
@@ -108,7 +93,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Constants.EnquiryConstants.PRODUCT_SEARCH_VALUE_LIMIT);
     }
 
-
     @Override
     public void onClick(View view) {
         SpeechRecognitionHelper.run(this);
@@ -117,9 +101,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (t1 != null) {
-            t1.stop();
-            t1.shutdown();
+        if (tts != null) {
+            tts.stop();
+            tts.shutdown();
         }
     }
 
@@ -132,12 +116,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void onError() {
-                t1.speak(SERVER_ERROR, TextToSpeech.QUEUE_FLUSH, null);
+                tts.speak(SERVER_ERROR, TextToSpeech.QUEUE_FLUSH, null);
             }
 
             @Override
             public void onNetworkError() {
-                t1.speak(NETWORK_ERROR, TextToSpeech.QUEUE_FLUSH, null);
+                tts.speak(NETWORK_ERROR, TextToSpeech.QUEUE_FLUSH, null);
             }
         });
     }
@@ -146,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         productSearchDataManager.getProductList(prepareSearchQuery(query), new ResponseHandler<ProductSearchResponse>() {
             @Override
             public void onRequestFailure() {
-                t1.speak(SERVER_ERROR, TextToSpeech.QUEUE_FLUSH, null);
+                tts.speak(SERVER_ERROR, TextToSpeech.QUEUE_FLUSH, null);
             }
 
             @Override
@@ -167,14 +151,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         productLocationDataManager.getProductLocationInfo(request, new ResponseHandler<ProductLocationResponse>() {
             @Override
             public void onRequestFailure() {
-                t1.speak(SERVER_ERROR, TextToSpeech.QUEUE_FLUSH, null);
+                tts.speak(SERVER_ERROR, TextToSpeech.QUEUE_FLUSH, null);
             }
 
             @Override
             public void onRequestSuccess(ProductLocationResponse model) {
                 progressBar.setVisibility(View.GONE);
                 String aisle = "You can find " + query + " in Aisle " + model.getLocationResponseList().get(0).getAisleCode();
-                t1.speak(aisle, TextToSpeech.QUEUE_FLUSH, null);
+                tts.speak(aisle, TextToSpeech.QUEUE_FLUSH, null);
             }
         });
     }
