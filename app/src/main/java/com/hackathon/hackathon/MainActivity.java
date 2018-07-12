@@ -6,6 +6,7 @@ import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.ProgressBar;
 
 import com.hackathon.hackathon.data.IdentityManager;
 import com.hackathon.hackathon.data.ProductLocationDataManager;
@@ -23,7 +24,11 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
+    private String SERVER_ERROR = "Server Error. Try again please.";
+    private String NETWORK_ERROR = "Internet not available. Try again please.";
+    private String STORE_NUMBER = "2087";
     private TextToSpeech t1;
+    private ProgressBar progressBar;
 
     private PDADataConnectorFactory pdaDataConnectorFactory;
     private PreferencesHelper preferencesHelper;
@@ -36,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        progressBar = findViewById(R.id.progress_bar);
         findViewById(R.id.button_record).setOnClickListener(this);
 
         pdaDataConnectorFactory = new PDADataConnectorFactory();
@@ -53,8 +59,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         });
-
-        callIdentity("Biscuit");
     }
 
     @Override
@@ -72,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // in “matches” array we holding a results... let’s show the most relevant
             if (matches.size() > 0) {
                 String text = matches.get(0).toString();
+                progressBar.setVisibility(View.VISIBLE);
                 callIdentity(text);
 //                t1.speak(Data.getInstance().getAnswer(text), TextToSpeech.QUEUE_FLUSH, null);
 
@@ -98,8 +103,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Constants.EnquiryConstants.PRODUCT_SEARCH_VALUE_FIELDS,
                 Constants.EnquiryConstants.PRODUCT_SEARCH_VALUE_RES_TYPE,
                 Constants.EnquiryConstants.PRODUCT_SEARCH_VALUE_CONFIG,
-//                String.valueOf(mConfigHelper.getStoreNumber()),
-                "",
+                STORE_NUMBER,
                 Constants.EnquiryConstants.PRODUCT_SEARCH_VALUE_OFFSET,
                 Constants.EnquiryConstants.PRODUCT_SEARCH_VALUE_LIMIT);
     }
@@ -128,47 +132,49 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void onError() {
-
+                t1.speak(SERVER_ERROR, TextToSpeech.QUEUE_FLUSH, null);
             }
 
             @Override
             public void onNetworkError() {
-
+                t1.speak(NETWORK_ERROR, TextToSpeech.QUEUE_FLUSH, null);
             }
         });
     }
 
-    private void callSearchAPI(String query) {
+    private void callSearchAPI(final String query) {
         productSearchDataManager.getProductList(prepareSearchQuery(query), new ResponseHandler<ProductSearchResponse>() {
             @Override
             public void onRequestFailure() {
-
+                t1.speak(SERVER_ERROR, TextToSpeech.QUEUE_FLUSH, null);
             }
 
             @Override
             public void onRequestSuccess(ProductSearchResponse model) {
                 ProductOverviewAPIRequest request = new ProductOverviewAPIRequest();
-                request.setLocationId("2087");
-                request.setIdentityAccessToken("Bearer "+preferencesHelper.getPreferences().getString(Constants.SignOnConstants.AUTH_ACCESS_TOKEN, ""));
+                request.setLocationId(STORE_NUMBER);
+                request.setIdentityAccessToken("Bearer " + preferencesHelper.getPreferences().getString(Constants.SignOnConstants.AUTH_ACCESS_TOKEN, ""));
                 request.setApiKey(getString(R.string.api_key));
                 String tpnb = model.getProductListResponseRoot().getProductListSubRoot().getProducts().getResults().get(0).getTBNB();
                 request.setTpnb(tpnb.length() == 8 ? "0" + tpnb : tpnb);
 
-                callLocationAPI(request);
+                callLocationAPI(request, query);
             }
         });
     }
 
-    private void callLocationAPI(ProductOverviewAPIRequest request) {
+    private void callLocationAPI(ProductOverviewAPIRequest request, final String query) {
         productLocationDataManager.getProductLocationInfo(request, new ResponseHandler<ProductLocationResponse>() {
             @Override
             public void onRequestFailure() {
-
+                t1.speak(SERVER_ERROR, TextToSpeech.QUEUE_FLUSH, null);
             }
 
             @Override
             public void onRequestSuccess(ProductLocationResponse model) {
-
+                progressBar.setVisibility(View.GONE);
+                String aisle = "You can find " + query + " in Aisle " + model.getLocationResponseList().get(0).getAisleCode();
+                t1.speak(aisle, TextToSpeech.QUEUE_FLUSH, null);
             }
         });
     }

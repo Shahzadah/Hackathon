@@ -11,8 +11,6 @@ public class Constants {
         public static final String TOKEN_TYPE_KEY = "token_type";
         public static final String EXPIRE_IN_KEY = "expires_in";
         public static final String REFRESH_TOKEN_KEY = "refresh_token";
-        public static final String EXPIRES_IN_KEY = "expires_in";
-        private static final String AUTHORITY = "com.tesco.pdasignon.provider";
     }
 
 
@@ -30,7 +28,7 @@ public class Constants {
         //Product Search values
         public static final String PRODUCT_SEARCH_VALUE_GEO = "uk";
         public static final String PRODUCT_SEARCH_VALUE_DIST_CHANNEL = "ghs";
-        public static final String PRODUCT_SEARCH_VALUE_FIELDS = "tpnb,name,price,image";
+        public static final String PRODUCT_SEARCH_VALUE_FIELDS = "tpnb";
         public static final String PRODUCT_SEARCH_VALUE_RES_TYPE = "products";
         public static final String PRODUCT_SEARCH_VALUE_CONFIG = "default";
         public static final int PRODUCT_SEARCH_VALUE_OFFSET = 0;
