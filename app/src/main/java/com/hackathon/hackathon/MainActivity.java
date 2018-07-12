@@ -7,6 +7,7 @@ import android.speech.tts.TextToSpeech;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.hackathon.hackathon.data.IdentityManager;
 import com.hackathon.hackathon.data.ProductLocationDataManager;
@@ -67,18 +68,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // there can be some strings because sometimes speech recognizing inaccurate
             // more relevant results in the beginning of the list
             ArrayList matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-
             // in “matches” array we holding a results... let’s show the most relevant
             if (matches.size() > 0) {
                 String text = matches.get(0).toString();
-                progressBar.setVisibility(View.VISIBLE);
-                callIdentity(text);
-//                tts.speak(Data.getInstance().getAnswer(text), TextToSpeech.QUEUE_FLUSH, null);
-//                Toast.makeText(MainActivity.this, matches.get(0).toString(), Toast.LENGTH_LONG).show();
+                if (text.contains("where can I find")) {
+                    progressBar.setVisibility(View.VISIBLE);
+                    String newText = text.replace("where can I find", "");
+                    callIdentity(newText);
+                } else {
+                    String answer = Data.getInstance().getAnswer(text);
+                    tts.speak(answer, TextToSpeech.QUEUE_FLUSH, null);
+                }
+                Toast.makeText(MainActivity.this, text, Toast.LENGTH_LONG).show();
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
+
 
     private SearchProductRequest prepareSearchQuery(String queryText) {
         return new SearchProductRequest(
