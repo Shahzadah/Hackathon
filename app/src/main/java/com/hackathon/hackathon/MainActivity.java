@@ -7,6 +7,17 @@ import android.speech.tts.TextToSpeech;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
+import com.hackathon.hackathon.data.IdentityManager;
+import com.hackathon.hackathon.data.ProductLocationDataManager;
+import com.hackathon.hackathon.data.ProductSearchDataManager;
+import com.hackathon.hackathon.framework.PreferencesHelper;
+import com.hackathon.hackathon.framework.ResponseHandler;
+import com.hackathon.hackathon.framework.data.PDADataConnectorFactory;
+import com.hackathon.hackathon.models.ProductLocationResponse;
+import com.hackathon.hackathon.models.ProductOverviewAPIRequest;
+import com.hackathon.hackathon.models.ProductSearchResponse;
+import com.hackathon.hackathon.models.SearchProductRequest;
+
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -14,11 +25,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private TextToSpeech t1;
 
+    private PDADataConnectorFactory pdaDataConnectorFactory;
+    private PreferencesHelper preferencesHelper;
+    private IdentityManager identityManager;
+    private ProductSearchDataManager productSearchDataManager;
+    private ProductLocationDataManager productLocationDataManager;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         findViewById(R.id.button_record).setOnClickListener(this);
+
+        pdaDataConnectorFactory = new PDADataConnectorFactory();
+        preferencesHelper = new PreferencesHelper(this);
+
+        identityManager = new IdentityManager(pdaDataConnectorFactory, preferencesHelper);
+        productSearchDataManager = new ProductSearchDataManager(pdaDataConnectorFactory);
+        productLocationDataManager = new ProductLocationDataManager(pdaDataConnectorFactory);
 
         t1 = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
@@ -28,6 +53,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         });
+
+        callIdentity("Biscuit");
     }
 
     @Override
@@ -45,7 +72,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // in “matches” array we holding a results... let’s show the most relevant
             if (matches.size() > 0) {
                 String text = matches.get(0).toString();
-                t1.speak(Data.getInstance().getAnswer(text), TextToSpeech.QUEUE_FLUSH, null);
+                callIdentity(text);
+//                t1.speak(Data.getInstance().getAnswer(text), TextToSpeech.QUEUE_FLUSH, null);
 
 
 //                Toast.makeText(MainActivity.this, matches.get(0).toString(), Toast.LENGTH_LONG).show();
@@ -57,6 +85,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         super.onActivityResult(requestCode, resultCode, data);
     }
+
+
+    /**
+     * Prepare search query to call api for Load more (will add offset while load more).
+     */
+    private SearchProductRequest prepareSearchQuery(String queryText) {
+        return new SearchProductRequest(
+                queryText,
+                Constants.EnquiryConstants.PRODUCT_SEARCH_VALUE_GEO,
+                Constants.EnquiryConstants.PRODUCT_SEARCH_VALUE_DIST_CHANNEL,
+                Constants.EnquiryConstants.PRODUCT_SEARCH_VALUE_FIELDS,
+                Constants.EnquiryConstants.PRODUCT_SEARCH_VALUE_RES_TYPE,
+                Constants.EnquiryConstants.PRODUCT_SEARCH_VALUE_CONFIG,
+//                String.valueOf(mConfigHelper.getStoreNumber()),
+                "",
+                Constants.EnquiryConstants.PRODUCT_SEARCH_VALUE_OFFSET,
+                Constants.EnquiryConstants.PRODUCT_SEARCH_VALUE_LIMIT);
+    }
+
 
     @Override
     public void onClick(View view) {
@@ -70,5 +117,59 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             t1.stop();
             t1.shutdown();
         }
+    }
+
+    private void callIdentity(final String query) {
+        identityManager.getIdentity(this, new IdentityManager.IdentityCallback() {
+            @Override
+            public void onSuccess(String id) {
+                callSearchAPI(query);
+            }
+
+            @Override
+            public void onError() {
+
+            }
+
+            @Override
+            public void onNetworkError() {
+
+            }
+        });
+    }
+
+    private void callSearchAPI(String query) {
+        productSearchDataManager.getProductList(prepareSearchQuery(query), new ResponseHandler<ProductSearchResponse>() {
+            @Override
+            public void onRequestFailure() {
+
+            }
+
+            @Override
+            public void onRequestSuccess(ProductSearchResponse model) {
+                ProductOverviewAPIRequest request = new ProductOverviewAPIRequest();
+                request.setLocationId("2087");
+                request.setIdentityAccessToken("Bearer "+preferencesHelper.getPreferences().getString(Constants.SignOnConstants.AUTH_ACCESS_TOKEN, ""));
+                request.setApiKey(getString(R.string.api_key));
+                String tpnb = model.getProductListResponseRoot().getProductListSubRoot().getProducts().getResults().get(0).getTBNB();
+                request.setTpnb(tpnb.length() == 8 ? "0" + tpnb : tpnb);
+
+                callLocationAPI(request);
+            }
+        });
+    }
+
+    private void callLocationAPI(ProductOverviewAPIRequest request) {
+        productLocationDataManager.getProductLocationInfo(request, new ResponseHandler<ProductLocationResponse>() {
+            @Override
+            public void onRequestFailure() {
+
+            }
+
+            @Override
+            public void onRequestSuccess(ProductLocationResponse model) {
+
+            }
+        });
     }
 }

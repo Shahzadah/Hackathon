@@ -24,4 +24,16 @@ public class Constants {
     public static class ApiUrl {
         public static final String BASE = "http://uk09744iss02.s9744.tsl/";
     }
+
+
+    public static final class EnquiryConstants {
+        //Product Search values
+        public static final String PRODUCT_SEARCH_VALUE_GEO = "uk";
+        public static final String PRODUCT_SEARCH_VALUE_DIST_CHANNEL = "ghs";
+        public static final String PRODUCT_SEARCH_VALUE_FIELDS = "tpnb,name,price,image";
+        public static final String PRODUCT_SEARCH_VALUE_RES_TYPE = "products";
+        public static final String PRODUCT_SEARCH_VALUE_CONFIG = "default";
+        public static final int PRODUCT_SEARCH_VALUE_OFFSET = 0;
+        public static final int PRODUCT_SEARCH_VALUE_LIMIT = 10;
+    }
 }

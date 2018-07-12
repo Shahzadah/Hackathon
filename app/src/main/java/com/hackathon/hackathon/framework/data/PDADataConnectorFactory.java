@@ -15,7 +15,7 @@ public class PDADataConnectorFactory {
     }
 
 
-    public PDADataConnector createCloudConnector(String baseUrl, int requestType) {
+    public PDADataConnector createCloudConnector(String baseUrl, int... test) {
         this.service = ServiceGenerator.getRestService(baseUrl);
         return new PDACloudDataConnector(service);
     }

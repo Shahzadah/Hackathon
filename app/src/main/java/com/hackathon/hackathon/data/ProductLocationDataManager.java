@@ -11,8 +11,8 @@ public class ProductLocationDataManager {
 
     private PDADataConnector cloudConnector;
 
-    ProductLocationDataManager(PDADataConnectorFactory dataConnectorFactory) {
-        cloudConnector = dataConnectorFactory.createCloudConnector("http://productlocation.global.tesco.org/v4/stores/", PDADataConnectorFactory.REST_REQUEST);
+    public ProductLocationDataManager(PDADataConnectorFactory dataConnectorFactory) {
+        cloudConnector = dataConnectorFactory.createCloudConnector("http://productlocation.global.tesco.org/v4/", PDADataConnectorFactory.REST_REQUEST);
     }
 
     /**

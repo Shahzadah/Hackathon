@@ -12,7 +12,7 @@ import com.hackathon.hackathon.models.SearchProductRequest;
 public class ProductSearchDataManager {
     private PDADataConnector cloudConnector;
 
-    ProductSearchDataManager(PDADataConnectorFactory dataConnectorFactory) {
+    public ProductSearchDataManager(PDADataConnectorFactory dataConnectorFactory) {
         cloudConnector = dataConnectorFactory.createCloudConnector("https://search.api.tesco.com/api/search/",PDADataConnectorFactory.REST_REQUEST);
     }
 
