@@ -24,7 +24,7 @@ public interface PDAService {
             Constants.ApiHeader.CONTENT_TYPE_JSON,
             Constants.ApiHeader.ACCEPT_CHARSET
     })
-    @GET("StoreAPI/api/StoreDetails/GetStoreDetails")
+    @GET("./")
     Call<StoreDetailsApiModel> getStoreDetails(@Query("IP") String ip);
 
     @Headers({

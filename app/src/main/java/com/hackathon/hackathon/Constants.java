@@ -1,6 +1,9 @@
 package com.hackathon.hackathon;
 
 public class Constants {
+
+    public static final String STORE_DETAILS = "StoreDetails";
+
     public static final class SignOnConstants {
         public static final String AUTH_ACCESS_TOKEN = "oauth.accesstoken";
         public static final String AUTH_REFRESH_TOKEN = "oauth.refreshtoken";
@@ -28,7 +31,7 @@ public class Constants {
         //Product Search values
         public static final String PRODUCT_SEARCH_VALUE_GEO = "uk";
         public static final String PRODUCT_SEARCH_VALUE_DIST_CHANNEL = "ghs";
-        public static final String PRODUCT_SEARCH_VALUE_FIELDS = "tpnb";
+        public static final String PRODUCT_SEARCH_VALUE_FIELDS = "tpnb,name";
         public static final String PRODUCT_SEARCH_VALUE_RES_TYPE = "products";
         public static final String PRODUCT_SEARCH_VALUE_CONFIG = "default";
         public static final int PRODUCT_SEARCH_VALUE_OFFSET = 0;

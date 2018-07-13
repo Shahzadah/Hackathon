@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -19,8 +21,10 @@ import com.hackathon.hackathon.models.ProductLocationResponse;
 import com.hackathon.hackathon.models.ProductOverviewAPIRequest;
 import com.hackathon.hackathon.models.ProductSearchResponse;
 import com.hackathon.hackathon.models.SearchProductRequest;
+import com.hackathon.hackathon.models.StoreDetailsApiModel;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -28,8 +32,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String SERVER_ERROR = "Server Error. Try again please.";
     private String NETWORK_ERROR = "Internet not available. Try again please.";
     private String STORE_NUMBER = "2087";
+    private String GREETING_MSG = "Welcome to %s store, How can I help you today?";
     private TextToSpeech tts;
     private ProgressBar progressBar;
+    private RecyclerView recyclerView;
+    private ChatAppMsgAdapter mAdapter;
+    private StoreDetailsApiModel mStoreDetails;
+    private List<ChatAppMsgDTO> list;
 
     private PDADataConnectorFactory pdaDataConnectorFactory;
     private PreferencesHelper preferencesHelper;
@@ -42,9 +51,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         progressBar = findViewById(R.id.progress_bar);
+        recyclerView = findViewById(R.id.chat_recycler_view);
         findViewById(R.id.button_record).setOnClickListener(this);
 
-        pdaDataConnectorFactory = new PDADataConnectorFactory();
+        PDADataConnectorFactory pdaDataConnectorFactory = new PDADataConnectorFactory();
         preferencesHelper = new PreferencesHelper(this);
 
         identityManager = new IdentityManager(pdaDataConnectorFactory, preferencesHelper);
@@ -57,34 +67,54 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (status != TextToSpeech.ERROR) {
                     tts.setLanguage(Locale.UK);
                 }
+                if (mStoreDetails != null) {
+                    String welcomeText = String.format(GREETING_MSG, mStoreDetails.getStoreName());
+                    tts.speak(welcomeText, TextToSpeech.QUEUE_FLUSH, null);
+                }
             }
         });
+
+        if (getIntent() != null && getIntent().hasExtra(Constants.STORE_DETAILS)) {
+            mStoreDetails = (StoreDetailsApiModel) getIntent().getSerializableExtra(Constants.STORE_DETAILS);
+        }
+
+        list = new ArrayList<>();
+        mAdapter = new ChatAppMsgAdapter(list);
+        LinearLayoutManager mLayoutManager = new LinearLayoutManager(this);
+//        mLayoutManager.setStackFromEnd(true);
+//        mLayoutManager.setReverseLayout(true);
+        recyclerView.setLayoutManager(mLayoutManager);
+        recyclerView.setAdapter(mAdapter);
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == SpeechRecognitionHelper.VOICE_RECOGNITION_REQUEST_CODE && resultCode == RESULT_OK) {
-            // receiving a result in string array
-            // there can be some strings because sometimes speech recognizing inaccurate
-            // more relevant results in the beginning of the list
             ArrayList matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-            // in “matches” array we holding a results... let’s show the most relevant
             if (matches.size() > 0) {
-                String text = matches.get(0).toString();
-                if (text.contains("where can I find")) {
+                String question = matches.get(0).toString();
+                addQuestionInList(question);
+                if (question.contains("where can I find")) {
                     progressBar.setVisibility(View.VISIBLE);
-                    String newText = text.replace("where can I find", "");
+                    String newText = question.replace("where can I find", "");
+                    callIdentity(newText);
+                } else if (question.contains("where is")) {
+                    progressBar.setVisibility(View.VISIBLE);
+                    String newText = question.replace("where is", "");
+                    callIdentity(newText);
+                } else if (question.contains("where can I get")) {
+                    progressBar.setVisibility(View.VISIBLE);
+                    String newText = question.replace("where can I get", "");
                     callIdentity(newText);
                 } else {
-                    String answer = Data.getInstance().getAnswer(text);
-                    tts.speak(answer, TextToSpeech.QUEUE_FLUSH, null);
+                    String answer = Data.getInstance().getAnswer(question);
+                    addMessageInList(answer);
                 }
-                Toast.makeText(MainActivity.this, text, Toast.LENGTH_LONG).show();
+//                Toast.makeText(MainActivity.this, question, Toast.LENGTH_LONG).show();
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
-
 
     private SearchProductRequest prepareSearchQuery(String queryText) {
         return new SearchProductRequest(
@@ -141,6 +171,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void onRequestSuccess(ProductSearchResponse model) {
+                if (model == null
+                        || model.getProductListResponseRoot() == null
+                        || model.getProductListResponseRoot().getProductListSubRoot() == null
+                        || model.getProductListResponseRoot().getProductListSubRoot().getProducts() == null
+                        || model.getProductListResponseRoot().getProductListSubRoot().getProducts().getResults() == null
+                        || model.getProductListResponseRoot().getProductListSubRoot().getProducts().getResults().size() == 0) {
+                    progressBar.setVisibility(View.GONE);
+                    addMessageInList(Data.NO_ANSWER);
+                    return;
+                }
                 ProductOverviewAPIRequest request = new ProductOverviewAPIRequest();
                 request.setLocationId(STORE_NUMBER);
                 request.setIdentityAccessToken("Bearer " + preferencesHelper.getPreferences().getString(Constants.SignOnConstants.AUTH_ACCESS_TOKEN, ""));
@@ -163,9 +203,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onRequestSuccess(ProductLocationResponse model) {
                 progressBar.setVisibility(View.GONE);
+                if (model == null
+                        || model.getLocationResponseList() == null
+                        || model.getLocationResponseList().size() == 0) {
+                    addMessageInList(Data.NO_ANSWER);
+                    return;
+                }
                 String aisle = "You can find " + query + " in Aisle " + model.getLocationResponseList().get(0).getAisleCode();
                 tts.speak(aisle, TextToSpeech.QUEUE_FLUSH, null);
             }
         });
+    }
+
+    private void addQuestionInList(String text) {
+        ChatAppMsgDTO msg = new ChatAppMsgDTO(ChatAppMsgDTO.MSG_TYPE_SENT, text);
+        list.add(msg);
+        mAdapter.notifyDataSetChanged();
+    }
+
+    private void addMessageInList(String text) {
+        ChatAppMsgDTO msg = new ChatAppMsgDTO(ChatAppMsgDTO.MSG_TYPE_RECEIVED, text);
+        list.add(msg);
+        mAdapter.notifyDataSetChanged();
+        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
     }
 }
