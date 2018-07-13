@@ -9,7 +9,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import com.hackathon.hackathon.data.IdentityManager;
 import com.hackathon.hackathon.data.ProductLocationDataManager;
@@ -210,7 +209,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     return;
                 }
                 String aisle = "You can find " + query + " in Aisle " + model.getLocationResponseList().get(0).getAisleCode();
-                tts.speak(aisle, TextToSpeech.QUEUE_FLUSH, null);
+                addMessageInList(aisle);
             }
         });
     }

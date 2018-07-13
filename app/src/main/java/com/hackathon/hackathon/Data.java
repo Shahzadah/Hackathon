@@ -7,7 +7,7 @@ public class Data {
 
     private static Data _data;
 
-    private final String NO_ANSWER = "Sorry, Can you come again?";
+    public static final String NO_ANSWER = "Sorry, Can you come again?";
     private final HashMap<String, String> mData;
 
     public static Data getInstance() {
@@ -23,13 +23,13 @@ public class Data {
         mData.put("thank you", "welcome");
         mData.put("hi", "hello");
         mData.put("good day", "thank you, you too");
-        mData.put("is there any offer on cosmetics", "we have good offers on loreal products");
-        mData.put("ok", "welcome");
+        mData.put("is there any offer on cosmetics", "we have good offers on loreal products, would you like to know more?");
+        mData.put("yes please", "we have buy 1 get 1 free on all ranges of loreal matte lipstics ");
         mData.put("thanks", "welcome");
         mData.put("hello", "hi");
-        mData.put("can you help me", "eager to help, tell me");
+        mData.put("can you help me", "yes, eager to help, tell me");
         mData.put("is there any discount going on", "we have good offers on clothing");
-        mData.put("do u accept card", "yes we do accept card");
+        mData.put("do you accept cards", "yes we do accept all visa master and amex cards");
         mData.put("where is female clothing section", "It is in Aisle 12 behind pharmacy");
         mData.put("bye", "bye bye");
         mData.put("go to hell", "that is so rude");
